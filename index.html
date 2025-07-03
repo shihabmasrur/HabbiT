@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HabbiT - 21 Day Habit Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-top: 40px;
+      color: #333;
+    }
+    #habit-form {
+      margin: 40px 0 20px 0;
+      display: flex;
+      gap: 10px;
+    }
+    #habit-input {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    #habit-submit {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      background: #4caf50;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #habit-submit:hover {
+      background: #388e3c;
+    }
+    #tracker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 30px;
+      max-width: 500px;
+    }
+    .circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #4caf50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      user-select: none;
+      position: relative;
+    }
+    .circle.ticked {
+      background: #4caf50;
+      color: #fff;
+      border-color: #388e3c;
+    }
+    #congrats {
+      margin-top: 30px;
+      font-size: 1.5rem;
+      color: #ff9800;
+      font-weight: bold;
+      display: none;
+    }
+    #habit-title {
+      margin-bottom: 10px;
+      color: #4caf50;
+      font-size: 1.3rem;
+      font-weight: 500;
+    }
+    #points {
+      display: none;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      color: #1976d2;
+      font-weight: 500;
+    }
+    #restart-btn {
+      display: none;
+      margin-bottom: 18px;
+      background: #ff5252;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>HabbiT</h1>
+  <div id="points" style="display:none; margin-bottom: 10px; font-size: 1.1rem; color: #1976d2; font-weight: 500;">Points: 0</div>
+  <button id="restart-btn" style="display:none; margin-bottom: 18px; background: #ff5252; color: #fff; border: none; border-radius: 5px; padding: 8px 18px; font-size: 1rem; cursor: pointer;">Restart</button>
+  <div id="instructions" style="max-width: 500px; margin-top: 10px; margin-bottom: 20px; color: #444; font-size: 1.08rem; background: #e8f5e9; border-radius: 8px; padding: 16px;">
+    Choose just one habit you want to build — like waking up early, drinking more water, or journaling daily. Focus on that one goal. Use this tracker to mark each day you stick to it. Small steps, tracked daily, lead to big changes. Stay consistent!
+  </div>
+  <form id="habit-form">
+    <input id="habit-input" type="text" placeholder="Enter your habit (e.g. Drink Water)" required />
+    <button id="habit-submit" type="submit">Start</button>
+  </form>
+  <div id="habit-title"></div>
+  <div id="tracker"></div>
+  <div id="quote" style="display:none; margin-top: 18px; font-size: 1.13rem; color: #6d4c41; background: #fffde7; border-radius: 8px; padding: 16px; max-width: 500px; text-align: center;"></div>
+  <div id="congrats">🎉 Congratulations! You completed your 21-day habit streak! 🎉</div>
+  <script>
+    const habitForm = document.getElementById('habit-form');
+    const habitInput = document.getElementById('habit-input');
+    const habitTitle = document.getElementById('habit-title');
+    const tracker = document.getElementById('tracker');
+    const congrats = document.getElementById('congrats');
+    const pointsDiv = document.getElementById('points');
+    const restartBtn = document.getElementById('restart-btn');
+    const quoteDiv = document.getElementById('quote');
+    const quotes = [
+      "You have no enemies today. Just discipline.",
+      "Like Guts, you fight your own demons. One day at a time.",
+      "Another step toward your own Vinland. Keep going.",
+      "A warrior isn't born in battle — but in quiet discipline.",
+      "You passed today's test, like Gon facing the Hunter Exam.",
+      "Even Musashi started with one swing. One day, you'll master yourself.",
+      "Chains don't bind you. You're Kurapika with resolve.",
+      "Every day you log is a sword strike in the void. Precision. Focus.",
+      "You bear your Brand and still move forward. Respect.",
+      "You've endured another eclipse of laziness. Good job, struggler.",
+      "Guts never stopped walking. Neither did you.",
+      "A calm mind sharpens the blade. You're doing well.",
+      "You're building Nen, one day at a time. That's how Hunters grow.",
+      "Even Thorfinn changed his path. So can you.",
+      "To overcome yourself is the truest form of strength.",
+      "You've taken another step on your solo journey. Keep walking.",
+      "You faced today's eclipse and didn't flinch. Keep resisting.",
+      "Like Killua, you're rewiring your instincts. Habit by habit.",
+      "Not every fight is with a sword. You're winning the silent ones.",
+      "Victory isn't loud. It's consistent. You're doing it right."
+    ];
+    const completionQuote = "You've done it. 21 days. Like Thorfinn finding peace, like Guts still walking, like Musashi mastering stillness — you've faced yourself and endured. This isn't the end, it's your rebirth. Keep becoming.";
+
+    function saveState(habit, ticks, lastTickTime, points) {
+      localStorage.setItem('habbit_habit', habit);
+      localStorage.setItem('habbit_ticks', JSON.stringify(ticks));
+      if (lastTickTime) {
+        localStorage.setItem('habbit_last_tick', lastTickTime);
+      }
+      localStorage.setItem('habbit_points', points);
+    }
+    function loadState() {
+      return {
+        habit: localStorage.getItem('habbit_habit') || '',
+        ticks: JSON.parse(localStorage.getItem('habbit_ticks') || '[]'),
+        lastTick: localStorage.getItem('habbit_last_tick') || null,
+        points: parseInt(localStorage.getItem('habbit_points') || '0', 10),
+      };
+    }
+    function clearState() {
+      localStorage.removeItem('habbit_habit');
+      localStorage.removeItem('habbit_ticks');
+      localStorage.removeItem('habbit_last_tick');
+      localStorage.removeItem('habbit_points');
+    }
+
+    function updatePoints(points) {
+      pointsDiv.textContent = `Points: ${points}`;
+    }
+
+    function showQuote(day) {
+      if (day >= 1 && day <= 20) {
+        quoteDiv.textContent = quotes[day - 1];
+        quoteDiv.style.display = 'block';
+      } else if (day === 21) {
+        quoteDiv.textContent = completionQuote;
+        quoteDiv.style.display = 'block';
+      } else {
+        quoteDiv.style.display = 'none';
+      }
+    }
+
+    function renderCircles(ticks, points) {
+      tracker.innerHTML = '';
+      let tickedCount = ticks.filter(Boolean).length;
+      for (let i = 0; i < 21; i++) {
+        const circle = document.createElement('div');
+        circle.className = 'circle' + (ticks[i] ? ' ticked' : '');
+        circle.textContent = i + 1;
+        circle.dataset.index = i;
+        circle.addEventListener('click', () => {
+          const { lastTick } = loadState();
+          const now = new Date().getTime();
+
+          if (lastTick && now - lastTick < 24 * 60 * 60 * 1000) {
+            alert('You can only tick one circle every 24 hours!');
+            return;
+          }
+
+          if (!ticks[i]) {
+            ticks[i] = true;
+            points++;
+            saveState(habitTitle.textContent, ticks, now, points);
+            renderCircles(ticks, points);
+            updatePoints(points);
+            checkCompletion(ticks);
+            const newTickedCount = ticks.filter(Boolean).length;
+            showQuote(newTickedCount);
+          }
+        });
+        tracker.appendChild(circle);
+      }
+      // Show quote for current progress
+      showQuote(tickedCount);
+    }
+
+    function checkCompletion(ticks) {
+      if (ticks.length === 21 && ticks.every(Boolean)) {
+        congrats.style.display = 'block';
+      } else {
+        congrats.style.display = 'none';
+      }
+    }
+
+    habitForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const habit = habitInput.value.trim();
+      if (habit) {
+        habitTitle.textContent = habit;
+        habitForm.style.display = 'none';
+        document.getElementById('instructions').style.display = 'none';
+        pointsDiv.style.display = 'block';
+        restartBtn.style.display = 'inline-block';
+        const ticks = Array(21).fill(false);
+        clearState(); // Clear previous state for a new habit
+        saveState(habit, ticks, null, 0);
+        renderCircles(ticks, 0);
+        updatePoints(0);
+        checkCompletion(ticks);
+        showQuote(0);
+      }
+    });
+
+    restartBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to restart? This will erase your progress and points.')) {
+        clearState();
+        window.location.reload();
+        setTimeout(() => {
+          quoteDiv.textContent = 'You Only Lose When You Give Up So Start Again and Never Give Up';
+          quoteDiv.style.display = 'block';
+        }, 100);
+      }
+    });
+
+    // On load, check if habit exists
+    window.addEventListener('DOMContentLoaded', () => {
+      const { habit, ticks, points } = loadState();
+      if (habit) {
+        habitTitle.textContent = habit;
+        habitForm.style.display = 'none';
+        document.getElementById('instructions').style.display = 'none';
+        pointsDiv.style.display = 'block';
+        restartBtn.style.display = 'inline-block';
+        const filledTicks = Array(21).fill(false);
+        (ticks || []).forEach((v, i) => filledTicks[i] = !!v);
+        renderCircles(filledTicks, points);
+        updatePoints(points);
+        checkCompletion(filledTicks);
+        showQuote(filledTicks.filter(Boolean).length);
+      } else if (quoteDiv && localStorage.getItem('habbit_points') === null) {
+        // Show restart quote if just restarted
+        quoteDiv.textContent = 'You Only Lose When You Give Up So Start Again and Never Give Up';
+        quoteDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html> 
